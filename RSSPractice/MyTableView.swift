@@ -7,6 +7,7 @@
 
 import UIKit
 
+// 自適應高度tableView
 class MyTableView: UITableView {
 
     override var contentSize:CGSize {

@@ -24,8 +24,8 @@ class RssCell: UITableViewCell {
     var item: RSSItem? {
         didSet {
             titleLabel.text = item?.title
-            dateLabel.text = item?.title
-            desLabel.text = item?.title
+            dateLabel.text = item?.pubDate
+            desLabel.text = item?.description
 
         }
     }
@@ -53,7 +53,7 @@ class ViewController: UIViewController {
 
     private func fetchData() {
         let feedParser = FeedParser()
-        feedParser.parseFeed(url: "https://www.ptt.cc/atom/movie.xml") { rssItems in
+        feedParser.parseFeed(url: "https://news.ltn.com.tw/rss/business.xml") { rssItems in
             self.rssItems = rssItems
             self.cellStates = Array(repeating: .collapsed, count: rssItems.count)
             OperationQueue.main.addOperation {

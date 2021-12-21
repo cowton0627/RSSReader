@@ -7,20 +7,20 @@
 
 import Foundation
 
+// Model
 struct RSSItem {
     let title: String
-//    let pubDate: String
-//    let description: String
+    let pubDate: String
+    let description: String
 //    let name: String
 //    let content: String
 
 }
 
-// download xml from server
-// parse xml to foundation objects
-// call back
+// download xml from server,and parse xml to foundation objects, then if call back is needed?
+
+// Parser class
 class FeedParser: NSObject, XMLParserDelegate {
-    
     private var rssItems = [RSSItem]()
     private var currentElement = ""
     
@@ -65,7 +65,7 @@ class FeedParser: NSObject, XMLParserDelegate {
     // MARK: - XML Parser Delegate
     func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
         currentElement = elementName
-        if currentElement == "entry" {
+        if currentElement == "item" {
             currentTitle = ""
             currentPubDate = ""
             currentDescription = ""
@@ -82,9 +82,9 @@ class FeedParser: NSObject, XMLParserDelegate {
     }
     
     func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
-        if elementName == "entry" {
-            let rssItem = RSSItem(title: currentTitle)
-//            let rssItem = RSSItem(title: currentTitle, pubDate: currentPubDate, description: currentDescription)
+        if elementName == "item" {
+//            let rssItem = RSSItem(title: currentTitle)
+            let rssItem = RSSItem(title: currentTitle, pubDate: currentPubDate, description: currentDescription)
             self.rssItems.append(rssItem)
         }
     }
