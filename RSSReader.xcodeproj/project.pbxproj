@@ -20,7 +20,7 @@
 /* Begin PBXFileReference section */
 		9160C1AA27707FBE00B32963 /* XML.Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XML.Parser.swift; sourceTree = "<group>"; };
 		9160C1AC27713D8B00B32963 /* MyTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyTableView.swift; sourceTree = "<group>"; };
-		91F46A8D27707DCA00FC9AA9 /* RSSPractice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RSSPractice.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		91F46A8D27707DCA00FC9AA9 /* RSSReader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RSSReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		91F46A9027707DCA00FC9AA9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		91F46A9227707DCA00FC9AA9 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		91F46A9427707DCA00FC9AA9 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -44,7 +44,7 @@
 		91F46A8427707DCA00FC9AA9 = {
 			isa = PBXGroup;
 			children = (
-				91F46A8F27707DCA00FC9AA9 /* RSSPractice */,
+				91F46A8F27707DCA00FC9AA9 /* RSSReader */,
 				91F46A8E27707DCA00FC9AA9 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -52,12 +52,12 @@
 		91F46A8E27707DCA00FC9AA9 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				91F46A8D27707DCA00FC9AA9 /* RSSPractice.app */,
+				91F46A8D27707DCA00FC9AA9 /* RSSReader.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		91F46A8F27707DCA00FC9AA9 /* RSSPractice */ = {
+		91F46A8F27707DCA00FC9AA9 /* RSSReader */ = {
 			isa = PBXGroup;
 			children = (
 				91F46A9027707DCA00FC9AA9 /* AppDelegate.swift */,
@@ -70,15 +70,15 @@
 				91F46A9B27707DD100FC9AA9 /* LaunchScreen.storyboard */,
 				91F46A9E27707DD100FC9AA9 /* Info.plist */,
 			);
-			path = RSSPractice;
+			path = RSSReader;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		91F46A8C27707DCA00FC9AA9 /* RSSPractice */ = {
+		91F46A8C27707DCA00FC9AA9 /* RSSReader */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 91F46AA127707DD100FC9AA9 /* Build configuration list for PBXNativeTarget "RSSPractice" */;
+			buildConfigurationList = 91F46AA127707DD100FC9AA9 /* Build configuration list for PBXNativeTarget "RSSReader" */;
 			buildPhases = (
 				91F46A8927707DCA00FC9AA9 /* Sources */,
 				91F46A8A27707DCA00FC9AA9 /* Frameworks */,
@@ -88,9 +88,9 @@
 			);
 			dependencies = (
 			);
-			name = RSSPractice;
-			productName = RSSPractice;
-			productReference = 91F46A8D27707DCA00FC9AA9 /* RSSPractice.app */;
+			name = RSSReader;
+			productName = RSSReader;
+			productReference = 91F46A8D27707DCA00FC9AA9 /* RSSReader.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -108,7 +108,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 91F46A8827707DCA00FC9AA9 /* Build configuration list for PBXProject "RSSPractice" */;
+			buildConfigurationList = 91F46A8827707DCA00FC9AA9 /* Build configuration list for PBXProject "RSSReader" */;
 			compatibilityVersion = "Xcode 13.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -121,7 +121,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				91F46A8C27707DCA00FC9AA9 /* RSSPractice */,
+				91F46A8C27707DCA00FC9AA9 /* RSSReader */,
 			);
 		};
 /* End PBXProject section */
@@ -299,7 +299,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = REDACTED;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = RSSPractice/Info.plist;
+				INFOPLIST_FILE = RSSReader/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -310,7 +310,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = individualStudio.RSSPractice;
+				PRODUCT_BUNDLE_IDENTIFIER = individualStudio.RSSReader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -327,7 +327,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = REDACTED;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = RSSPractice/Info.plist;
+				INFOPLIST_FILE = RSSReader/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -338,7 +338,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = individualStudio.RSSPractice;
+				PRODUCT_BUNDLE_IDENTIFIER = individualStudio.RSSReader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -349,7 +349,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		91F46A8827707DCA00FC9AA9 /* Build configuration list for PBXProject "RSSPractice" */ = {
+		91F46A8827707DCA00FC9AA9 /* Build configuration list for PBXProject "RSSReader" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				91F46A9F27707DD100FC9AA9 /* Debug */,
@@ -358,7 +358,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		91F46AA127707DD100FC9AA9 /* Build configuration list for PBXNativeTarget "RSSPractice" */ = {
+		91F46AA127707DD100FC9AA9 /* Build configuration list for PBXNativeTarget "RSSReader" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				91F46AA227707DD100FC9AA9 /* Debug */,

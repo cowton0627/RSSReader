@@ -1,6 +1,6 @@
 //
 //  MyTableView.swift
-//  RSSPractice
+//  RSSReader
 //
 //  Created by Chun-Li Cheng on 2021/12/21.
 //
