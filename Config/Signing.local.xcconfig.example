@@ -1,0 +1,7 @@
+// Template. Copy to Signing.local.xcconfig (which git ignores) and put your
+// own Team ID below. Find it in Xcode > Settings > Accounts, or in the
+// membership details on developer.apple.com.
+//
+// Leave it empty to build for the simulator only.
+
+LOCAL_DEVELOPMENT_TEAM = ABCDE12345

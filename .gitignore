@@ -25,6 +25,9 @@ fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output/
 
+# Local signing settings (Team ID stays off git; see the .example file)
+Config/Signing.local.xcconfig
+
 # App packaging and signing artifacts
 *.ipa
 *.dSYM.zip
