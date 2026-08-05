@@ -23,19 +23,24 @@ final class FeedStore {
 
     private let defaults: UserDefaults
     private let itemCacheURL: URL?
+    private let readArticlesURL: URL?
     private let persistenceQueue = DispatchQueue(label: "RSSReader.FeedStore.persistence", qos: .utility)
 
     private(set) var categories: [FeedCategory]
     private var itemsByFeedURL: [String: [RSSItem]]
+    private var readArticleIdentifiers: Set<String>
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         self.itemCacheURL = Self.makeItemCacheURL()
+        self.readArticlesURL = Self.makeReadArticlesURL()
         self.categories = []
         self.itemsByFeedURL = [:]
+        self.readArticleIdentifiers = []
 
         self.categories = loadCategories()
         self.itemsByFeedURL = loadItems()
+        self.readArticleIdentifiers = loadReadArticles()
     }
 
     // MARK: - Library
@@ -130,9 +135,7 @@ final class FeedStore {
 
     /// Merges the cached articles for `subscriptions`, newest first.
     func items(for subscriptions: [FeedSubscription]) -> [RSSItem] {
-        subscriptions
-            .flatMap { itemsByFeedURL[$0.url] ?? [] }
-            .sortedByPublishDate
+        cachedItems(for: subscriptions).sortedByPublishDate
     }
 
     func setItems(_ items: [RSSItem], for feedURL: String) {
@@ -144,11 +147,86 @@ final class FeedStore {
     func persistItems() {
         let subscribedURLs = Set(categories.flatMap { $0.subscriptions.map { $0.url } })
         itemsByFeedURL = itemsByFeedURL.filter { subscribedURLs.contains($0.key) }
+        forgetReadArticlesOutsideCache()
 
         guard let itemCacheURL, let data = try? JSONEncoder().encode(itemsByFeedURL) else { return }
 
         persistenceQueue.async {
             try? data.write(to: itemCacheURL, options: .atomic)
+        }
+    }
+
+    private func cachedItems(for subscriptions: [FeedSubscription]) -> [RSSItem] {
+        subscriptions.flatMap { itemsByFeedURL[$0.url] ?? [] }
+    }
+
+    // MARK: - Read state
+
+    func isRead(_ item: RSSItem) -> Bool {
+        readArticleIdentifiers.contains(item.identifier)
+    }
+
+    /// Returns whether the state actually changed, so callers can skip redrawing.
+    @discardableResult
+    func setRead(_ isRead: Bool, for item: RSSItem) -> Bool {
+        let identifier = item.identifier
+        let didChange = isRead
+            ? readArticleIdentifiers.insert(identifier).inserted
+            : readArticleIdentifiers.remove(identifier) != nil
+
+        if didChange {
+            persistReadArticles()
+        }
+
+        return didChange
+    }
+
+    func markAllRead(in subscriptions: [FeedSubscription]) {
+        let identifiers = cachedItems(for: subscriptions).map { $0.identifier }
+        let countBefore = readArticleIdentifiers.count
+        readArticleIdentifiers.formUnion(identifiers)
+
+        if readArticleIdentifiers.count != countBefore {
+            persistReadArticles()
+        }
+    }
+
+    func unreadCount(for subscriptions: [FeedSubscription]) -> Int {
+        cachedItems(for: subscriptions).reduce(into: 0) { count, item in
+            count += isRead(item) ? 0 : 1
+        }
+    }
+
+    /// Read state for articles that have aged out of the cache can never be shown
+    /// again, so drop it rather than let the set grow without bound. An empty
+    /// cache means a failed refresh, not that everything was forgotten.
+    private func forgetReadArticlesOutsideCache() {
+        guard !itemsByFeedURL.isEmpty else { return }
+
+        let cachedIdentifiers = Set(itemsByFeedURL.values.flatMap { $0.map { $0.identifier } })
+        let countBefore = readArticleIdentifiers.count
+        readArticleIdentifiers.formIntersection(cachedIdentifiers)
+
+        if readArticleIdentifiers.count != countBefore {
+            persistReadArticles()
+        }
+    }
+
+    private func loadReadArticles() -> Set<String> {
+        guard let readArticlesURL,
+              let data = try? Data(contentsOf: readArticlesURL),
+              let identifiers = try? JSONDecoder().decode(Set<String>.self, from: data) else {
+            return []
+        }
+
+        return identifiers
+    }
+
+    private func persistReadArticles() {
+        guard let readArticlesURL, let data = try? JSONEncoder().encode(readArticleIdentifiers) else { return }
+
+        persistenceQueue.async {
+            try? data.write(to: readArticlesURL, options: .atomic)
         }
     }
 
@@ -182,6 +260,17 @@ final class FeedStore {
         }
 
         return cachesDirectory.appendingPathComponent("RSSReaderFeedCache.json")
+    }
+
+    /// Read state is not a cache — losing it to a purge would be worse than
+    /// re-downloading articles — so it lives outside the caches directory.
+    private static func makeReadArticlesURL() -> URL? {
+        guard let supportDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+
+        try? FileManager.default.createDirectory(at: supportDirectory, withIntermediateDirectories: true)
+        return supportDirectory.appendingPathComponent("RSSReaderReadArticles.json")
     }
 }
 

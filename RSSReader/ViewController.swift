@@ -33,9 +33,12 @@ class RssCell: UITableViewCell {
     private static let thumbnailPixelSize: CGFloat = 320
     private var representedImageURL: URL?
 
+    static let unreadColor = UIColor(red: 0.10, green: 0.47, blue: 0.75, alpha: 1)
+
     private let headlineLabel = UILabel()
     private let summaryLabel = UILabel()
     private let metadataLabel = UILabel()
+    private let unreadIndicator = UIView()
     private let thumbnailView = UIImageView()
     private let placeholderView = UIView()
     private let placeholderIcon = UIImageView(image: UIImage(systemName: "newspaper"))
@@ -57,14 +60,16 @@ class RssCell: UITableViewCell {
         placeholderView.isHidden = false
     }
 
-    var item: RSSItem? {
-        didSet {
-            guard let item = item else { return }
-            headlineLabel.text = item.title
-            summaryLabel.text = item.description.isEmpty ? "Open the story for the full article" : "↗ " + item.description
-            metadataLabel.text = "•  \(item.sourceTitle) / \(item.relativePublishTime)"
-            loadImage(from: item.imageURL)
-        }
+    func configure(with item: RSSItem, isRead: Bool) {
+        headlineLabel.text = item.title
+        headlineLabel.textColor = isRead ? .secondaryLabel : .label
+        summaryLabel.text = item.description.isEmpty ? "Open the story for the full article" : "↗ " + item.description
+        metadataLabel.text = "\(item.sourceTitle) / \(item.relativePublishTime)"
+        // Kept in the layout when read, so headlines stay aligned down the list.
+        unreadIndicator.alpha = isRead ? 0 : 1
+        thumbnailView.alpha = isRead ? 0.65 : 1
+        placeholderView.alpha = isRead ? 0.65 : 1
+        loadImage(from: item.imageURL)
     }
 
     private func setupView() {
@@ -88,6 +93,10 @@ class RssCell: UITableViewCell {
         metadataLabel.textColor = .secondaryLabel
         metadataLabel.numberOfLines = 1
 
+        unreadIndicator.backgroundColor = Self.unreadColor
+        unreadIndicator.layer.cornerRadius = 4
+        unreadIndicator.translatesAutoresizingMaskIntoConstraints = false
+
         thumbnailView.contentMode = .scaleAspectFill
         thumbnailView.clipsToBounds = true
         thumbnailView.layer.cornerRadius = 6
@@ -99,7 +108,12 @@ class RssCell: UITableViewCell {
         placeholderIcon.tintColor = UIColor(red: 0.15, green: 0.68, blue: 0.33, alpha: 1)
         placeholderIcon.contentMode = .scaleAspectFit
 
-        let textStack = UIStackView(arrangedSubviews: [headlineLabel, summaryLabel, metadataLabel])
+        let metadataStack = UIStackView(arrangedSubviews: [unreadIndicator, metadataLabel])
+        metadataStack.axis = .horizontal
+        metadataStack.spacing = 8
+        metadataStack.alignment = .center
+
+        let textStack = UIStackView(arrangedSubviews: [headlineLabel, summaryLabel, metadataStack])
         textStack.axis = .vertical
         textStack.spacing = 6
         textStack.alignment = .fill
@@ -126,6 +140,9 @@ class RssCell: UITableViewCell {
             placeholderIcon.centerYAnchor.constraint(equalTo: placeholderView.centerYAnchor),
             placeholderIcon.widthAnchor.constraint(equalToConstant: 28),
             placeholderIcon.heightAnchor.constraint(equalToConstant: 28),
+
+            unreadIndicator.widthAnchor.constraint(equalToConstant: 8),
+            unreadIndicator.heightAnchor.constraint(equalToConstant: 8),
 
             textStack.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
             textStack.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
@@ -336,7 +353,47 @@ class ViewController: UIViewController {
     }
 
     private func updateHeaderTitle() {
-        collectionLabel.text = store.title(for: selectedSelection) ?? "All Feeds"
+        let title = store.title(for: selectedSelection) ?? "All Feeds"
+        let unreadCount = store.unreadCount(for: store.subscriptions(for: selectedSelection))
+        collectionLabel.text = unreadCount > 0 ? "\(title)  ·  \(unreadCount) unread" : title
+    }
+
+    private func setRead(_ isRead: Bool, at indexPath: IndexPath) {
+        guard rssItems.indices.contains(indexPath.row),
+              store.setRead(isRead, for: rssItems[indexPath.row]) else {
+            return
+        }
+
+        myTableView.reloadRows(at: [indexPath], with: .none)
+        updateHeaderTitle()
+    }
+
+    @objc private func markAllReadTapped() {
+        let unreadCount = store.unreadCount(for: store.subscriptions(for: selectedSelection))
+        guard unreadCount > 0 else {
+            showMessage(title: "No Unread Articles", message: "Everything here has been read.")
+            return
+        }
+
+        let alertController = UIAlertController(
+            title: "Mark \(unreadCount) Articles as Read?",
+            message: nil,
+            preferredStyle: .actionSheet
+        )
+        alertController.addAction(UIAlertAction(title: "Mark All as Read", style: .default) { [weak self] _ in
+            guard let self = self else { return }
+            self.store.markAllRead(in: self.store.subscriptions(for: self.selectedSelection))
+            self.myTableView.reloadData()
+            self.updateHeaderTitle()
+        })
+        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let popoverPresentationController = alertController.popoverPresentationController {
+            popoverPresentationController.sourceView = collectionLabel
+            popoverPresentationController.sourceRect = collectionLabel.bounds
+        }
+
+        present(alertController, animated: true)
     }
 
     private func showMessage(title: String, message: String) {
@@ -423,17 +480,30 @@ class ViewController: UIViewController {
         let headerView = UIView(frame: CGRect(x: 0, y: 0, width: headerWidth, height: 68))
         headerView.backgroundColor = .systemBackground
 
-        collectionLabel = UILabel(frame: CGRect(x: 18, y: 0, width: max(headerWidth - 36, 0), height: 67.5))
+        let markAllReadWidth: CGFloat = 116
+        collectionLabel = UILabel(frame: CGRect(x: 18, y: 0, width: max(headerWidth - 36 - markAllReadWidth, 0), height: 67.5))
         updateHeaderTitle()
         collectionLabel.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         collectionLabel.font = .systemFont(ofSize: 18, weight: .bold)
         collectionLabel.textColor = UIColor(red: 0.10, green: 0.47, blue: 0.75, alpha: 1)
+        collectionLabel.adjustsFontSizeToFitWidth = true
+        collectionLabel.minimumScaleFactor = 0.8
+
+        let markAllReadButton = UIButton(type: .system)
+        markAllReadButton.frame = CGRect(x: headerWidth - 18 - markAllReadWidth, y: 0, width: markAllReadWidth, height: 67.5)
+        markAllReadButton.autoresizingMask = [.flexibleLeftMargin, .flexibleHeight]
+        markAllReadButton.setTitle("Mark all read", for: .normal)
+        markAllReadButton.titleLabel?.font = .systemFont(ofSize: 15, weight: .regular)
+        markAllReadButton.contentHorizontalAlignment = .right
+        markAllReadButton.tintColor = .secondaryLabel
+        markAllReadButton.addTarget(self, action: #selector(markAllReadTapped), for: .touchUpInside)
 
         let separator = UIView(frame: CGRect(x: 0, y: 67.5, width: headerWidth, height: 0.5))
         separator.autoresizingMask = [.flexibleWidth, .flexibleTopMargin]
         separator.backgroundColor = .separator
 
         headerView.addSubview(collectionLabel)
+        headerView.addSubview(markAllReadButton)
         headerView.addSubview(separator)
         return headerView
     }
@@ -546,7 +616,8 @@ extension ViewController: UITableViewDataSource {
             return UITableViewCell()
         }
 
-        cell.item = rssItems[indexPath.row]
+        let item = rssItems[indexPath.row]
+        cell.configure(with: item, isRead: store.isRead(item))
         return cell
     }
 }
@@ -554,6 +625,7 @@ extension ViewController: UITableViewDataSource {
 extension ViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        setRead(true, at: indexPath)
 
         guard let url = URL(string: rssItems[indexPath.row].link) else {
             return
@@ -561,6 +633,18 @@ extension ViewController: UITableViewDelegate {
 
         let articleViewController = SFSafariViewController(url: url)
         present(articleViewController, animated: true)
+    }
+
+    func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let isRead = store.isRead(rssItems[indexPath.row])
+        let action = UIContextualAction(style: .normal, title: isRead ? "Unread" : "Read") { [weak self] _, _, completion in
+            self?.setRead(!isRead, at: indexPath)
+            completion(true)
+        }
+
+        action.image = UIImage(systemName: isRead ? "circle" : "circle.fill")
+        action.backgroundColor = RssCell.unreadColor
+        return UISwipeActionsConfiguration(actions: [action])
     }
 }
 

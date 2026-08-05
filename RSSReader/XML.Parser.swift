@@ -21,6 +21,12 @@ extension RSSItem {
     var publishDate: Date? {
         ArticleDateParser.date(from: pubDate)
     }
+
+    /// Identifies an article across refreshes, so read state survives them.
+    /// A handful of feeds omit the link, so fall back to what else is stable.
+    var identifier: String {
+        link.isEmpty ? "\(sourceTitle)|\(title)|\(pubDate)" : link
+    }
 }
 
 private enum ArticleDateParser {
