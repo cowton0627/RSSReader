@@ -276,11 +276,6 @@ class ViewController: UIViewController {
         fetchData()
     }
 
-//https://developer.apple.com/news/rss/news.rss
-//https://www.apple.com/newsroom/rss-feed.rss
-//https://news.ltn.com.tw/rss/business.xml
-//https://www.ptt.cc/atom/movie.xml
-
     private func fetchData() {
         activeRefreshID = UUID()
         let refreshID = activeRefreshID
