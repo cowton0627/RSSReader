@@ -15,6 +15,10 @@
 		91F46A9827707DCA00FC9AA9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 91F46A9627707DCA00FC9AA9 /* Main.storyboard */; };
 		91F46A9A27707DD100FC9AA9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 91F46A9927707DD100FC9AA9 /* Assets.xcassets */; };
 		91F46A9D27707DD100FC9AA9 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 91F46A9B27707DD100FC9AA9 /* LaunchScreen.storyboard */; };
+		A10000000000000000000001 /* SubscriptionManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* SubscriptionManagerViewController.swift */; };
+		A10000000000000000000003 /* SidebarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* SidebarViewController.swift */; };
+		A10000000000000000000005 /* SidebarContainerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000006 /* SidebarContainerViewController.swift */; };
+		A10000000000000000000007 /* ExploreViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000008 /* ExploreViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +32,10 @@
 		91F46A9927707DD100FC9AA9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		91F46A9C27707DD100FC9AA9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		91F46A9E27707DD100FC9AA9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A10000000000000000000002 /* SubscriptionManagerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManagerViewController.swift; sourceTree = "<group>"; };
+		A10000000000000000000004 /* SidebarViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarViewController.swift; sourceTree = "<group>"; };
+		A10000000000000000000006 /* SidebarContainerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarContainerViewController.swift; sourceTree = "<group>"; };
+		A10000000000000000000008 /* ExploreViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,6 +73,10 @@
 				9160C1AC27713D8B00B32963 /* MyTableView.swift */,
 				9160C1AA27707FBE00B32963 /* XML.Parser.swift */,
 				91F46A9427707DCA00FC9AA9 /* ViewController.swift */,
+				A10000000000000000000002 /* SubscriptionManagerViewController.swift */,
+				A10000000000000000000004 /* SidebarViewController.swift */,
+				A10000000000000000000006 /* SidebarContainerViewController.swift */,
+				A10000000000000000000008 /* ExploreViewController.swift */,
 				91F46A9627707DCA00FC9AA9 /* Main.storyboard */,
 				91F46A9927707DD100FC9AA9 /* Assets.xcassets */,
 				91F46A9B27707DD100FC9AA9 /* LaunchScreen.storyboard */,
@@ -145,6 +157,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				91F46A9527707DCA00FC9AA9 /* ViewController.swift in Sources */,
+				A10000000000000000000001 /* SubscriptionManagerViewController.swift in Sources */,
+				A10000000000000000000003 /* SidebarViewController.swift in Sources */,
+				A10000000000000000000005 /* SidebarContainerViewController.swift in Sources */,
+				A10000000000000000000007 /* ExploreViewController.swift in Sources */,
 				9160C1AD27713D8B00B32963 /* MyTableView.swift in Sources */,
 				91F46A9127707DCA00FC9AA9 /* AppDelegate.swift in Sources */,
 				91F46A9327707DCA00FC9AA9 /* SceneDelegate.swift in Sources */,
@@ -310,7 +326,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = individualStudio.RSSReader;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.RSSReader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
