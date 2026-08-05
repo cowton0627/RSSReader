@@ -242,13 +242,9 @@ private extension UIImage {
 
 class ViewController: UIViewController {
     @IBOutlet weak var myTableView: MyTableView!
-    private let categoriesKey = "feedCategories"
-    private let feedItemCacheKey = "feedItemCache"
-    private let legacySubscriptionsKey = "feedSubscriptions"
+    private let store = FeedStore()
     private var rssItems: [RSSItem] = []
-    private var categories: [FeedCategory] = []
     private var selectedSelection: FeedSelection = .all
-    private var feedItemCache: [String: [RSSItem]] = [:]
     private var activeRefreshID = UUID()
     private var isApplyingAnimatedUpdate = false
     private var collectionLabel = UILabel()
@@ -256,12 +252,10 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        categories = loadCategories()
-        feedItemCache = loadFeedItemCache()
         configureNavigationBar()
         configureTableView()
         configureBottomTabBar()
-        applyCachedItems(for: subscriptions(for: selectedSelection))
+        applyCachedItems(for: store.subscriptions(for: selectedSelection))
         fetchData()
     }
 
@@ -273,7 +267,7 @@ class ViewController: UIViewController {
     private func fetchData() {
         activeRefreshID = UUID()
         let refreshID = activeRefreshID
-        let selectedSubscriptions = subscriptions(for: selectedSelection)
+        let selectedSubscriptions = store.subscriptions(for: selectedSelection)
 
         applyCachedItems(for: selectedSubscriptions)
 
@@ -309,10 +303,10 @@ class ViewController: UIViewController {
             self.myTableView.refreshControl?.endRefreshing()
 
             loadedItemsByURL.forEach { url, items in
-                self.feedItemCache[url] = Array(items.prefix(50))
+                self.store.setItems(items, for: url)
             }
 
-            self.saveFeedItemCache()
+            self.store.persistItems()
             self.applyCachedItems(for: selectedSubscriptions)
 
             if self.rssItems.isEmpty, !failedFeeds.isEmpty {
@@ -322,9 +316,7 @@ class ViewController: UIViewController {
     }
 
     private func applyCachedItems(for subscriptions: [FeedSubscription]) {
-        rssItems = subscriptions
-            .flatMap { feedItemCache[$0.url] ?? [] }
-            .sortedByPublishDate
+        rssItems = store.items(for: subscriptions)
 
         let updates = {
             self.updateHeaderTitle()
@@ -343,93 +335,8 @@ class ViewController: UIViewController {
         }
     }
 
-    private func loadCategories() -> [FeedCategory] {
-        if let data = UserDefaults.standard.data(forKey: categoriesKey),
-           let categories = try? JSONDecoder().decode([FeedCategory].self, from: data),
-           !categories.isEmpty {
-            return categories
-        }
-
-        if let data = UserDefaults.standard.data(forKey: legacySubscriptionsKey),
-           let subscriptions = try? JSONDecoder().decode([FeedSubscription].self, from: data),
-           !subscriptions.isEmpty {
-            let migratedCategories = [FeedCategory(title: "My Feeds", subscriptions: subscriptions)]
-            saveCategories(migratedCategories)
-            return migratedCategories
-        }
-
-        let defaultCategories = [FeedCategory(title: "My Feeds", subscriptions: [])]
-        saveCategories(defaultCategories)
-        return defaultCategories
-    }
-
-    private func saveCategories() {
-        saveCategories(categories)
-    }
-
-    private func saveCategories(_ categories: [FeedCategory]) {
-        guard let data = try? JSONEncoder().encode(categories) else {
-            return
-        }
-
-        UserDefaults.standard.set(data, forKey: categoriesKey)
-        UserDefaults.standard.synchronize()
-    }
-
-    private func loadFeedItemCache() -> [String: [RSSItem]] {
-        guard let data = UserDefaults.standard.data(forKey: feedItemCacheKey),
-              let cache = try? JSONDecoder().decode([String: [RSSItem]].self, from: data) else {
-            return [:]
-        }
-
-        return cache
-    }
-
-    private func saveFeedItemCache() {
-        let activeURLs = Set(categories.flatMap { $0.subscriptions.map { $0.url } })
-        let cacheToPersist = feedItemCache.reduce(into: [String: [RSSItem]]()) { partialResult, entry in
-            guard activeURLs.contains(entry.key) else { return }
-            partialResult[entry.key] = Array(entry.value.prefix(50))
-        }
-
-        guard let data = try? JSONEncoder().encode(cacheToPersist) else {
-            return
-        }
-
-        UserDefaults.standard.set(data, forKey: feedItemCacheKey)
-        UserDefaults.standard.synchronize()
-    }
-
-    private func subscriptions(for selection: FeedSelection) -> [FeedSubscription] {
-        switch selection {
-        case .all:
-            return categories.flatMap { $0.subscriptions }
-        case .category(let categoryIndex):
-            guard categories.indices.contains(categoryIndex) else { return [] }
-            return categories[categoryIndex].subscriptions
-        case .subscription(let categoryIndex, let subscriptionIndex):
-            guard categories.indices.contains(categoryIndex),
-                  categories[categoryIndex].subscriptions.indices.contains(subscriptionIndex) else {
-                return []
-            }
-
-            return [categories[categoryIndex].subscriptions[subscriptionIndex]]
-        }
-    }
-
     private func updateHeaderTitle() {
-        switch selectedSelection {
-        case .all:
-            collectionLabel.text = "All Feeds"
-        case .category(let categoryIndex):
-            collectionLabel.text = categories.indices.contains(categoryIndex) ? categories[categoryIndex].title : "Category"
-        case .subscription(let categoryIndex, let subscriptionIndex):
-            if categories.indices.contains(categoryIndex), categories[categoryIndex].subscriptions.indices.contains(subscriptionIndex) {
-                collectionLabel.text = categories[categoryIndex].subscriptions[subscriptionIndex].title
-            } else {
-                collectionLabel.text = "Feed"
-            }
-        }
+        collectionLabel.text = store.title(for: selectedSelection) ?? "All Feeds"
     }
 
     private func showMessage(title: String, message: String) {
@@ -504,7 +411,7 @@ class ViewController: UIViewController {
     }
 
     private func presentSidebar() {
-        let sidebarViewController = SidebarViewController(categories: categories, selectedSelection: selectedSelection)
+        let sidebarViewController = SidebarViewController(categories: store.categories, selectedSelection: selectedSelection)
         sidebarViewController.delegate = self
         let navigationController = UINavigationController(rootViewController: sidebarViewController)
         let containerViewController = SidebarContainerViewController(contentViewController: navigationController)
@@ -566,6 +473,7 @@ extension ViewController: UITabBarDelegate {
 
 extension ViewController: ExploreViewControllerDelegate {
     func exploreViewController(_ viewController: ExploreViewController, didChoose subscription: FeedSubscription) {
+        var categories = store.categories
         guard !categories.flatMap({ $0.subscriptions }).contains(where: { $0.url == subscription.url }) else {
             showMessage(title: "Already Subscribed", message: "This RSS feed is already in your library.")
             return
@@ -576,9 +484,9 @@ extension ViewController: ExploreViewControllerDelegate {
         }
 
         categories[0].subscriptions.append(subscription)
-        saveCategories()
+        store.replaceCategories(categories)
         selectedSelection = .subscription(categoryIndex: 0, subscriptionIndex: categories[0].subscriptions.count - 1)
-        applyCachedItems(for: subscriptions(for: selectedSelection))
+        applyCachedItems(for: store.subscriptions(for: selectedSelection))
         fetchData()
         viewController.dismiss(animated: true)
     }
@@ -600,16 +508,14 @@ extension ViewController: SidebarViewControllerDelegate {
 
 extension ViewController: SubscriptionManagerViewControllerDelegate {
     func subscriptionManager(_ viewController: SubscriptionManagerViewController, didChangeDraft categories: [FeedCategory]) {
-        self.categories = categories
-        saveCategories()
+        store.replaceCategories(categories)
     }
 
     func subscriptionManager(_ viewController: SubscriptionManagerViewController, didUpdate categories: [FeedCategory]) {
-        self.categories = categories
-        saveCategories()
-        selectedSelection = normalizedSelection(selectedSelection)
-        pruneFeedCache()
-        applyCachedItems(for: subscriptions(for: selectedSelection))
+        store.replaceCategories(categories)
+        selectedSelection = store.normalized(selectedSelection)
+        store.persistItems()
+        applyCachedItems(for: store.subscriptions(for: selectedSelection))
         fetchData()
     }
 
@@ -624,31 +530,9 @@ extension ViewController: SubscriptionManagerViewControllerDelegate {
     }
 
     private func makeLibraryManager() -> SubscriptionManagerViewController {
-        let managerViewController = SubscriptionManagerViewController(categories: categories)
+        let managerViewController = SubscriptionManagerViewController(categories: store.categories)
         managerViewController.delegate = self
         return managerViewController
-    }
-
-
-    private func pruneFeedCache() {
-        let activeURLs = Set(categories.flatMap { $0.subscriptions.map { $0.url } })
-        feedItemCache = feedItemCache.filter { activeURLs.contains($0.key) }
-        saveFeedItemCache()
-    }
-
-    private func normalizedSelection(_ selection: FeedSelection) -> FeedSelection {
-        switch selection {
-        case .all:
-            return .all
-        case .category(let categoryIndex):
-            return categories.indices.contains(categoryIndex) ? selection : .all
-        case .subscription(let categoryIndex, let subscriptionIndex):
-            guard categories.indices.contains(categoryIndex),
-                  categories[categoryIndex].subscriptions.indices.contains(subscriptionIndex) else {
-                return .all
-            }
-            return selection
-        }
     }
 }
 
@@ -682,87 +566,12 @@ extension ViewController: UITableViewDelegate {
 
 private extension RSSItem {
     var relativePublishTime: String {
-        guard let date = pubDate.rssDate else {
+        guard let date = publishDate else {
             return pubDate
         }
 
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: date, relativeTo: Date())
-    }
-}
-
-private enum ArticleDateParser {
-    // Atom feeds publish ISO 8601 dates, RSS feeds publish RFC 822 ones,
-    // and plenty of feeds drift from both. Try the strict parsers first.
-    private static let iso8601Formatters: [ISO8601DateFormatter] = {
-        let standard = ISO8601DateFormatter()
-        standard.formatOptions = [.withInternetDateTime]
-
-        let fractionalSeconds = ISO8601DateFormatter()
-        fractionalSeconds.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-        return [standard, fractionalSeconds]
-    }()
-
-    private static let fallbackFormatters: [DateFormatter] = [
-        "E, d MMM yyyy HH:mm:ss Z",
-        "E, d MMM yyyy HH:mm:ss zzz",
-        "E, d MMM yyyy HH:mm Z",
-        "yyyy-MM-dd'T'HH:mm:ssXXXXX",
-        "yyyy-MM-dd'T'HH:mm:ss.SSSXXXXX",
-        "yyyy-MM-dd'T'HH:mm:ss",
-        "yyyy-MM-dd HH:mm:ss Z",
-        "yyyy-MM-dd"
-    ].map { dateFormat in
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        formatter.dateFormat = dateFormat
-        return formatter
-    }
-
-    static func date(from string: String) -> Date? {
-        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
-
-        for formatter in iso8601Formatters {
-            if let date = formatter.date(from: trimmed) {
-                return date
-            }
-        }
-
-        for formatter in fallbackFormatters {
-            if let date = formatter.date(from: trimmed) {
-                return date
-            }
-        }
-
-        return nil
-    }
-}
-
-private extension String {
-    var rssDate: Date? {
-        ArticleDateParser.date(from: self)
-    }
-}
-
-
-private extension Array where Element == RSSItem {
-    var sortedByPublishDate: [RSSItem] {
-        // Parse once per item instead of once per comparison; undated items sink to the bottom.
-        map { ($0, $0.pubDate.rssDate) }
-            .sorted { firstItem, secondItem in
-                switch (firstItem.1, secondItem.1) {
-                case let (firstDate?, secondDate?):
-                    return firstDate > secondDate
-                case (_?, nil):
-                    return true
-                default:
-                    return false
-                }
-            }
-            .map { $0.0 }
     }
 }

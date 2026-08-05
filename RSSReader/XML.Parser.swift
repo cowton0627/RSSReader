@@ -16,6 +16,63 @@ struct RSSItem: Codable {
     let sourceTitle: String
 }
 
+extension RSSItem {
+    /// Feeds publish timestamps in a mix of formats; nil means none of them matched.
+    var publishDate: Date? {
+        ArticleDateParser.date(from: pubDate)
+    }
+}
+
+private enum ArticleDateParser {
+    // Atom feeds publish ISO 8601 dates, RSS feeds publish RFC 822 ones,
+    // and plenty of feeds drift from both. Try the strict parsers first.
+    private static let iso8601Formatters: [ISO8601DateFormatter] = {
+        let standard = ISO8601DateFormatter()
+        standard.formatOptions = [.withInternetDateTime]
+
+        let fractionalSeconds = ISO8601DateFormatter()
+        fractionalSeconds.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        return [standard, fractionalSeconds]
+    }()
+
+    private static let fallbackFormatters: [DateFormatter] = [
+        "E, d MMM yyyy HH:mm:ss Z",
+        "E, d MMM yyyy HH:mm:ss zzz",
+        "E, d MMM yyyy HH:mm Z",
+        "yyyy-MM-dd'T'HH:mm:ssXXXXX",
+        "yyyy-MM-dd'T'HH:mm:ss.SSSXXXXX",
+        "yyyy-MM-dd'T'HH:mm:ss",
+        "yyyy-MM-dd HH:mm:ss Z",
+        "yyyy-MM-dd"
+    ].map { dateFormat in
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = dateFormat
+        return formatter
+    }
+
+    static func date(from string: String) -> Date? {
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        for formatter in iso8601Formatters {
+            if let date = formatter.date(from: trimmed) {
+                return date
+            }
+        }
+
+        for formatter in fallbackFormatters {
+            if let date = formatter.date(from: trimmed) {
+                return date
+            }
+        }
+
+        return nil
+    }
+}
+
 struct FeedSubscription: Codable, Equatable {
     var title: String
     let url: String

@@ -19,6 +19,7 @@
 		A10000000000000000000003 /* SidebarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* SidebarViewController.swift */; };
 		A10000000000000000000005 /* SidebarContainerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000006 /* SidebarContainerViewController.swift */; };
 		A10000000000000000000007 /* ExploreViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000008 /* ExploreViewController.swift */; };
+		A10000000000000000000009 /* FeedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000A /* FeedStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,6 +37,7 @@
 		A10000000000000000000004 /* SidebarViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarViewController.swift; sourceTree = "<group>"; };
 		A10000000000000000000006 /* SidebarContainerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarContainerViewController.swift; sourceTree = "<group>"; };
 		A10000000000000000000008 /* ExploreViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreViewController.swift; sourceTree = "<group>"; };
+		A1000000000000000000000A /* FeedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,6 +79,7 @@
 				A10000000000000000000004 /* SidebarViewController.swift */,
 				A10000000000000000000006 /* SidebarContainerViewController.swift */,
 				A10000000000000000000008 /* ExploreViewController.swift */,
+				A1000000000000000000000A /* FeedStore.swift */,
 				91F46A9627707DCA00FC9AA9 /* Main.storyboard */,
 				91F46A9927707DD100FC9AA9 /* Assets.xcassets */,
 				91F46A9B27707DD100FC9AA9 /* LaunchScreen.storyboard */,
@@ -161,6 +164,7 @@
 				A10000000000000000000003 /* SidebarViewController.swift in Sources */,
 				A10000000000000000000005 /* SidebarContainerViewController.swift in Sources */,
 				A10000000000000000000007 /* ExploreViewController.swift in Sources */,
+				A10000000000000000000009 /* FeedStore.swift in Sources */,
 				9160C1AD27713D8B00B32963 /* MyTableView.swift in Sources */,
 				91F46A9127707DCA00FC9AA9 /* AppDelegate.swift in Sources */,
 				91F46A9327707DCA00FC9AA9 /* SceneDelegate.swift in Sources */,
