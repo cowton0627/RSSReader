@@ -34,6 +34,19 @@ leaves your machine — `project.pbxproj` holds no Team ID at all.
   **Mark all read** in the list header clears the current selection.
 - Tapping an article opens it in a Safari view controller.
 
+## App icon
+
+The icon is drawn in code, not painted by hand, so it can be adjusted without a
+design tool:
+
+```sh
+python3 -m pip install Pillow      # once
+python3 Tools/make_app_icon.py
+```
+
+That rewrites `AppIcon.png` in the asset catalog at 1024×1024 with no alpha
+channel; Xcode derives every smaller size from it.
+
 ## Source layout
 
 | File | Responsibility |
