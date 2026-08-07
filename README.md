@@ -1,53 +1,58 @@
+<img src="RSSReader/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="88" align="left" hspace="16" vspace="4">
+
 # RSSReader
 
-A UIKit RSS and Atom reader for iOS. Subscribe to feeds, group them into
-categories, and read one merged timeline, newest first.
+**An RSS and Atom reader for iOS, written in UIKit with no third-party
+dependencies.** Subscribe to feeds, group them into categories, and read one
+merged timeline, newest first.
 
-## Requirements
+<br clear="left">
 
-- Xcode 13 or later
-- iOS 15.0 or later (simulator or device)
+<img src="Docs/screenshot-today.png" width="300" align="right" hspace="24">
 
-## Running it
+## What it does
+
+- **Reads RSS and Atom.** One `XMLParser` delegate handles both, pulls a
+  thumbnail out of whichever element the feed happened to use — `enclosure`,
+  `media:content`, `itunes:image`, or the first `<img>` in the summary — and
+  strips HTML out of the text.
+- **Groups feeds into categories.** Read everything at once, one category, or a
+  single feed. Feeds can be renamed, moved between categories, and deleted.
+- **Tracks what you have read.** Unread articles carry a dot and full-strength
+  text; opening one marks it read, swiping toggles it, and the header shows a
+  live unread count.
+- **Works offline.** The last 50 articles per feed are cached on disk, with
+  thumbnails cached in memory and on disk, downsampled before they are stored.
+- **Ships a feed directory.** The Explore tab lists ready-made feeds — BBC, The
+  Guardian, Apple, MIT, NASA, Smithsonian and others — to subscribe to in one
+  tap, so there is something to read before you have typed a single URL.
+- **Sorts dates that other readers give up on.** RSS publishes RFC 822
+  timestamps, Atom publishes ISO 8601, and real feeds drift from both; the
+  parser tries a list of formats rather than one.
+
+Articles open in a Safari view controller. Pull down to refresh.
+
+<br clear="right">
+
+## Building it
+
+Requires Xcode 13 or later and iOS 15.0 or later.
 
 The simulator needs no setup: open `RSSReader.xcodeproj`, pick a simulator, run.
 
-For a real device, supply your signing Team ID once:
+To run on a real device, supply your own signing Team ID once:
 
 ```sh
 cp Config/Signing.local.xcconfig.example Config/Signing.local.xcconfig
 ```
 
-then set `LOCAL_DEVELOPMENT_TEAM` in that copy. It is gitignored and never
-leaves your machine — `project.pbxproj` holds no Team ID at all.
+then set `LOCAL_DEVELOPMENT_TEAM` in that copy. It is gitignored, so no Team ID
+is ever committed — `project.pbxproj` contains none.
 
-## Using it
+## How it is put together
 
-- **Today** — the article list for whatever is selected. Pull down to refresh.
-- The list button (top left) opens the sidebar: All, a single category, or a
-  single feed.
-- **+** or the **Library** tab — add, rename, move, and delete feeds and
-  categories. Swipe left on a feed to move or delete it.
-- **Explore** tab — a built-in directory of feeds to subscribe to in one tap.
-- Unread articles carry a blue dot and full-strength text; read ones are dimmed.
-  Opening an article marks it read, swiping right on a row toggles it, and
-  **Mark all read** in the list header clears the current selection.
-- Tapping an article opens it in a Safari view controller.
-
-## App icon
-
-The icon is drawn in code, not painted by hand, so it can be adjusted without a
-design tool:
-
-```sh
-python3 -m pip install Pillow      # once
-python3 Tools/make_app_icon.py
-```
-
-That rewrites `AppIcon.png` in the asset catalog at 1024×1024 with no alpha
-channel; Xcode derives every smaller size from it.
-
-## Source layout
+No storyboard-heavy architecture and no dependency manager; views are built in
+code, and everything is `URLSession`, `XMLParser`, and `UIKit`.
 
 | File | Responsibility |
 | --- | --- |
@@ -58,7 +63,7 @@ channel; Xcode derives every smaller size from it.
 | `SubscriptionManagerViewController.swift` | Library editing |
 | `ExploreViewController.swift` | Built-in feed directory |
 
-## Where data lives
+Storage is deliberately split by what it would cost to lose:
 
 | What | Where |
 | --- | --- |
@@ -67,5 +72,25 @@ channel; Xcode derives every smaller size from it.
 | Read article identifiers | `Library/Application Support/RSSReaderReadArticles.json` |
 | Article thumbnails | `Library/Caches/RSSReaderThumbnails/` |
 
-`DECISIONS.md` explains why storage is split that way. `roadmap.md` lists what
-is not built yet.
+Losing the caches costs a re-download; losing reading history cannot be undone,
+so it lives where iOS will not purge it. `DECISIONS.md` records the reasoning
+behind this and the other choices.
+
+## App icon
+
+The icon is drawn in code rather than painted, so it can be adjusted without a
+design tool:
+
+```sh
+python3 -m pip install Pillow      # once
+python3 Tools/make_app_icon.py
+```
+
+That rewrites `AppIcon.png` in the asset catalog at 1024×1024 with no alpha
+channel; Xcode derives every smaller size from it.
+
+## Status
+
+A personal project, actively worked on and not published to the App Store. It
+does what the list above says and no more — `roadmap.md` tracks the known gaps,
+including an unread-only filter, real tabs, background refresh, and search.
