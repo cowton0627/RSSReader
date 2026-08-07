@@ -6,6 +6,23 @@ This file starts on 2026-08-05. Choices made before that — the custom sidebar
 container instead of `UISplitViewController`, the `RssCell` layout — left no
 record of their reasoning, and no reasoning is invented for them here.
 
+## 2026-08-07 — The app icon is drawn by a script
+
+`Tools/make_app_icon.py` draws the icon with Pillow and writes it straight into
+the asset catalog. Nothing about it is hand-painted, so the geometry, the
+gradient, and the stroke weight stay adjustable without a design tool and
+without anyone having to find the original file.
+
+The mark is the standard RSS broadcast symbol in white, on the same blue the
+list header and the unread dot already use, so the icon and the app read as one
+thing rather than two palettes. Two alternates were drawn and rejected: a
+white-background version, which disappears against pale wallpapers, and an
+abstraction of the article list, whose read rows vanished at 60px.
+
+The catalog holds one 1024×1024 entry and lets Xcode derive the rest, which is
+the Xcode 14+ single-size format. The PNG is written as RGB rather than RGBA
+because App Store submission rejects an icon with an alpha channel.
+
 ## 2026-08-05 — Read state lives outside the caches directory
 
 Read state is stored in `Library/Application Support/RSSReaderReadArticles.json`,
