@@ -106,6 +106,9 @@ class FeedParser: NSObject, XMLParserDelegate {
     private var isInsideItem = false
 
     private var requestedSourceTitle = ""
+    /// A channel carries more than one <title>: its own, and often another inside
+    /// <image>. Only the first one names the feed.
+    private var hasCapturedFeedTitle = false
     private var currentFeedTitle = "" {
         didSet {
             currentFeedTitle = currentFeedTitle.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -142,6 +145,7 @@ class FeedParser: NSObject, XMLParserDelegate {
         isInsideItem = false
         requestedSourceTitle = sourceTitle ?? URL(string: url)?.host ?? url
         currentFeedTitle = ""
+        hasCapturedFeedTitle = false
         parserCompletionHandler = completionHandler
 
         guard let url = URL(string: url), ["http", "https"].contains(url.scheme?.lowercased()) else {
@@ -194,7 +198,7 @@ class FeedParser: NSObject, XMLParserDelegate {
         case "title":
             if isInsideItem {
                 currentTitle += string
-            } else {
+            } else if !hasCapturedFeedTitle {
                 currentFeedTitle += string
             }
         case "pubDate", "published", "updated":
@@ -211,6 +215,10 @@ class FeedParser: NSObject, XMLParserDelegate {
     }
 
     func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
+        if elementName == "title", !isInsideItem, !currentFeedTitle.isEmpty {
+            hasCapturedFeedTitle = true
+        }
+
         if elementName == "item" || elementName == "entry" {
             let rssItem = RSSItem(
                 title: currentTitle,
