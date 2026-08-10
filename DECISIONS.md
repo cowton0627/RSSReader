@@ -6,6 +6,41 @@ This file starts on 2026-08-05. Choices made before that — the custom sidebar
 container instead of `UISplitViewController`, the `RssCell` layout — left no
 record of their reasoning, and no reasoning is invented for them here.
 
+## 2026-08-10 — Secrets are caught by three layers, not by remembering
+
+Nothing in this repository stops a Team ID or a key from being committed on its
+own, so the guard lives outside it, in three places that fail differently:
+
+- **`~/.gitignore_global`** keeps whole categories of file out — `xcuserdata/`,
+  `.env`, `*.mobileprovision`, `*.p12`. It matches paths, so a secret written
+  inside a `.swift` file passes straight through.
+- **`~/.config/git/hooks/pre-commit`** (global, via `core.hooksPath`) runs
+  `gitleaks git --staged` for content, plus a check for `DEVELOPMENT_TEAM` in
+  `project.pbxproj`, which Xcode writes back whenever Signing & Capabilities is
+  touched. It is bypassed by `--no-verify`, by Xcode's own commit UI (libgit2
+  runs no hooks), and by any repository that sets its own `core.hooksPath` —
+  that setting replaces the global one rather than adding to it.
+- **GitHub secret scanning push protection**, enabled on the repository. This is
+  the only layer that cannot be bypassed from a laptop, and the only one that
+  survives someone committing from a machine configured differently.
+
+The pattern for the Team ID check is deliberately not anchored on the plain
+`DEVELOPMENT_TEAM = ABCD123456;` form alone: `"DEVELOPMENT_TEAM[sdk=iphoneos*]"`
+overrides the xcconfig value just as effectively, and an earlier version that
+missed it would have let the setting back in.
+
+## 2026-08-09 — This repository's history was rewritten twice
+
+Every commit SHA changed. The first pass removed an Apple Team ID that had been
+committed in `project.pbxproj` since the initial commit; the second unified the
+author and committer identity onto a GitHub noreply address, since older commits
+carried a work email. Both were force-pushed.
+
+A clone taken before 2026-08-09 shares no commits with the current history and
+cannot be merged — re-clone instead. Nothing about the working tree changed:
+the build, the app, and every tracked file are byte-identical apart from the
+signing lines that were the point of the exercise.
+
 ## 2026-08-07 — The app icon is drawn by a script
 
 `Tools/make_app_icon.py` draws the icon with Pillow and writes it straight into
